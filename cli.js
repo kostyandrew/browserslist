@@ -35,6 +35,10 @@ function query(queries, opts) {
     }
 }
 
+if (isArg('--env') || isArg('-e')) {
+    process.env.BROWSERSLIST_ENV = getArgValue('--env') || getArgValue('-e');
+}
+
 if ( args.length === 0 || isArg('--help') || isArg('-h') ) {
     process.stdout.write([
         pkg.description,

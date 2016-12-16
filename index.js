@@ -98,6 +98,13 @@ var browserslist = function (selections, opts) {
     }
 
     if ( typeof selections === 'string' ) {
+        selections = browserslist.parseConfig(selections);
+    }
+
+    selections = browserslist.parseEnv(selections);
+    selections = browserslist.selectEnv(selections);
+
+    if ( typeof selections === 'string' ) {
         selections = selections.split(/,\s*/);
     }
 
@@ -332,12 +339,53 @@ browserslist.coverage = function (browsers, country) {
 browserslist.parseConfig = function (string) {
     return string.toString()
             .replace(/#[^\n]*/g, '')
+            .replace(/(.?)(\[\w+\])(.?)/g, '$1\n$2\n$3')
             .split(/\n/)
             .map(function (i) {
                 return i.trim();
             }).filter(function (i) {
                 return i !== '';
             });
+};
+
+browserslist.parseEnv = function (selection) {
+    if (toString.call(selection) === '[object Array]') {
+        var _selection = selection;
+        var currentGroup = 'defaults';
+        selection = {};
+        _selection.forEach(function (element) {
+            var envGroup = /\[\w+\]/.test(element);
+            if (envGroup) {
+                currentGroup = element.replace(/\[(\w+)\]/, '$1');
+            } else {
+                if (!selection.hasOwnProperty(currentGroup)) {
+                    selection[currentGroup] = [];
+                }
+                selection[currentGroup].push(element);
+            }
+        });
+    }
+
+    if (!selection.hasOwnProperty('defaults') || !selection.defaults.length) {
+        selection.defaults = browserslist.defaults;
+    }
+
+    return selection;
+};
+
+browserslist.getCurrentEnv = function () {
+    return process.env.BROWSERSLIST_ENV ||
+        process.env.NODE_ENV ||
+        'development';
+};
+
+browserslist.selectEnv = function (selections) {
+    var currentEnv = browserslist.getCurrentEnv();
+    if (selections.hasOwnProperty(currentEnv)) {
+        return selections[currentEnv];
+    } else {
+        return selections.defaults;
+    }
 };
 
 browserslist.queries = {
