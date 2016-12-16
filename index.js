@@ -104,10 +104,6 @@ var browserslist = function (selections, opts) {
     selections = browserslist.parseEnv(selections);
     selections = browserslist.selectEnv(selections);
 
-    if ( typeof selections === 'string' ) {
-        selections = selections.split(/,\s*/);
-    }
-
     var stats = getStat(opts);
 
     if ( !stats ) {
@@ -340,7 +336,7 @@ browserslist.parseConfig = function (string) {
     return string.toString()
             .replace(/#[^\n]*/g, '')
             .replace(/(.?)(\[\w+\])(.?)/g, '$1\n$2\n$3')
-            .split(/\n/)
+            .split(/[\n|,]/)
             .map(function (i) {
                 return i.trim();
             }).filter(function (i) {
@@ -349,7 +345,7 @@ browserslist.parseConfig = function (string) {
 };
 
 browserslist.parseEnv = function (selection) {
-    if (toString.call(selection) === '[object Array]') {
+    if (Object.prototype.toString.call(selection) === '[object Array]') {
         var _selection = selection;
         var currentGroup = 'defaults';
         selection = {};
@@ -367,7 +363,7 @@ browserslist.parseEnv = function (selection) {
     }
 
     if (!selection.hasOwnProperty('defaults') || !selection.defaults.length) {
-        selection.defaults = browserslist.defaults;
+        selection.defaults = [];
     }
 
     return selection;
